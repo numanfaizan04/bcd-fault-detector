@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BCD to 7-Segment Fault Detector Simulator</title>
+    <style>
+        /* === CSS DESIGN STYLES === */
+        body {
+            background-color: #121214;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .simulator-container {
+            background-color: #1e1e24;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            text-align: center;
+            width: 420px;
+            border: 1px solid #2d2d35;
+        }
+
+        h2 {
+            margin-bottom: 12px;
+            font-size: 22px;
+            color: #ffffff;
+        }
+
+        .student-name {
+            color: #00ff66;
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-top: 0;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .roll-no {
+            color: #888892;
+            font-size: 14px;
+            margin-top: 0;
+            margin-bottom: 25px;
+            letter-spacing: 0.5px;
+        }
+
+        .output-panel {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background-color: #151518;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid #25252a;
+        }
+
+        /* Red Alert LED Indicator */
+        .led-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: #a0a0ab;
+        }
+        
+        .led-off {
+            width: 30px;
+            height: 30px;
+            background-color: #3a0000;
+            border-radius: 50%;
+            margin-bottom: 8px;
+            border: 2px solid #222;
+            transition: all 0.15s ease;
+        }
+        
+        .led-on {
+            width: 30px;
+            height: 30px;
+            background-color: #ff0000;
+            border-radius: 50%;
+            margin-bottom: 8px;
+            box-shadow: 0 0 20px #ff0000, inset 0 0 5px #ffffff;
+            border: 2px solid #ff6666;
+            transition: all 0.15s ease;
+        }
+
+        /* 7-Segment Display Panel */
+        .display-border {
+            background-color: #050505;
+            padding: 20px 30px;
+            border-radius: 8px;
+            border: 2px solid #222;
+        }
+        
+        .seven-seg {
+            position: relative;
+            width: 60px;
+            height: 110px;
+        }
+        
+        .segment {
+            position: absolute;
+            background-color: #1a1a1a; /* Dark segments when unlit */
+            border-radius: 3px;
+            transition: background-color 0.1s, box-shadow 0.1s;
+        }
+        
+        /* Green active color to replicate hardware displays */
+        .segment.lit {
+            background-color: #00ff66; 
+            box-shadow: 0 0 10px #00ff66;
+        }
+
+        /* Hardcoded segment positions (a to g map layouts) */
+        .horiz { width: 40px; height: 8px; left: 10px; }
+        .vert { width: 8px; height: 40px; }
+
+        .top { top: 0; }
+        .middle { top: 51px; }
+        .bottom { bottom: 0; }
+
+        .top-left { top: 6px; left: 0; }
+        .top-right { top: 6px; right: 0; }
+        .bottom-left { top: 57px; left: 0; }
+        .bottom-right { top: 57px; right: 0; }
+
+        /* User Input Controls Panel */
+        .input-panel {
+            background-color: #151518;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #25252a;
+        }
+
+        .input-panel h3 { 
+            font-size: 13px; 
+            color: #a0a0ab; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0;
+        }
+        
+        .switches {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 10px;
+        }
+        
+        .switches label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 14px;
+            color: #ddd;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .switches input {
+            margin-bottom: 8px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .status-text {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #222;
+            font-size: 15px;
+            font-weight: 500;
+            color: #00ff66;
+        }
+        
+        .status-text span {
+            font-weight: bold;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="simulator-container">
+        <h2>BCD to 7-Segment Fault Detector</h2>
+        <p class="student-name">Muhammad Numan Javed</p>
+        <p class="roll-no">Roll No: 2025-cs-071</p>
+
+        <div class="output-panel">
+            <div class="led-container">
+                <div id="fault-led" class="led-off"></div>
+                <span>FAULT ALERT</span>
+            </div>
+
+            <div class="display-border">
+                <div class="seven-seg">
+                    <div id="seg-a" class="segment horiz top"></div>
+                    <div id="seg-f" class="segment vert top-left"></div>
+                    <div id="seg-b" class="segment vert top-right"></div>
+                    <div id="seg-g" class="segment horiz middle"></div>
+                    <div id="seg-e" class="segment vert bottom-left"></div>
+                    <div id="seg-c" class="segment vert bottom-right"></div>
+                    <div id="seg-d" class="segment horiz bottom"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-panel">
+            <h3>Binary Data Switches (Positional Weights)</h3>
+            <div class="switches">
+                <label><input type="checkbox" id="switch-A" onchange="runCircuitSimulation()">A (8)</label>
+                <label><input type="checkbox" id="switch-B" onchange="runCircuitSimulation()">B (4)</label>
+                <label><input type="checkbox" id="switch-C" onchange="runCircuitSimulation()">C (2)</label>
+                <label><input type="checkbox" id="switch-D" onchange="runCircuitSimulation()">D (1)</label>
+            </div>
+            <div class="status-text">
+                Decimal Line Value: <span id="decimal-val">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Truth mapping setup array for decimal states 0 to 9
+        const segmentMap = {
+            0: ['a', 'b', 'c', 'd', 'e', 'f'],
+            1: ['b', 'c'],
+            2: ['a', 'b', 'g', 'e', 'd'],
+            3: ['a', 'b', 'g', 'c', 'd'],
+            4: ['f', 'g', 'b', 'c'],
+            5: ['a', 'f', 'g', 'c', 'd'],
+            6: ['a', 'f', 'g', 'e', 'c', 'd'],
+            7: ['a', 'b', 'c'],
+            8: ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+            9: ['a', 'b', 'g', 'c', 'd']
+        };
+
+        function runCircuitSimulation() {
+            // Read inputs from switches (True = 1 / False = 0)
+            const bitA = document.getElementById('switch-A').checked; // Weight: 8
+            const bitB = document.getElementById('switch-B').checked; // Weight: 4
+            const bitC = document.getElementById('switch-C').checked; // Weight: 2
+            const bitD = document.getElementById('switch-D').checked; // Weight: 1
+
+            // Compute total current active state value
+            const decimalValue = (bitA ? 8 : 0) + (bitB ? 4 : 0) + (bitC ? 2 : 0) + (bitD ? 1 : 0);
+            document.getElementById('decimal-val').innerText = decimalValue;
+
+            // Clear previous screen render cycles 
+            clearAllDisplaySegments();
+
+            // --- HARDWARE BOOLEAN EQUATION EMULATION ---
+            // 1. 7408 AND / 7432 OR Evaluator: Fault = (A AND B) OR (A AND C)
+            const faultDetected = (bitA && bitB) || (bitA && bitC);
+            
+            // 2. 7404 Inverter Phase: Flip signal state
+            const blankingInputActiveLow = !faultDetected; 
+
+            // 3. 7447 Pin Override Emulation (Blanking Line Check)
+            if (blankingInputActiveLow === false) {
+                // Fault Condition Active (States 10-15 entered)
+                document.getElementById('fault-led').className = "led-on";
+                // The display remains blanked out (dark) since no segment arrays are parsed
+            } else {
+                // Normal Condition Safe (States 0-9 entered)
+                document.getElementById('fault-led').className = "led-off";
+                renderActiveSegments(decimalValue);
+            }
+        }
+
+        function clearAllDisplaySegments() {
+            const segments = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+            segments.forEach(seg => {
+                document.getElementById(`seg-${seg}`).classList.remove('lit');
+            });
+        }
+
+        function renderActiveSegments(digit) {
+            if (segmentMap[digit]) {
+                segmentMap[digit].forEach(seg => {
+                    document.getElementById(`seg-${seg}`).classList.add('lit');
+                });
+            }
+        }
+
+        // Run automatically on open initialization 
+        window.onload = runCircuitSimulation;
+    </script>
+</body>
+</html>
